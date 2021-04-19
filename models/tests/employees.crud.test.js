@@ -10,7 +10,7 @@ describe("Employee", () => {
 
       const uri = await fakeDB.getUri();
 
-      mongoose.connect(uri, {
+      await mongoose.connect(uri, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
       });
@@ -22,7 +22,7 @@ describe("Employee", () => {
     mongoose.models = {};
   });
   describe("Reading data", () => {
-    before(async () => {
+    beforeEach(async () => {
       const testEmpOne = new Employee({
         firstName: "Joe",
         lastName: "doe",
@@ -47,7 +47,7 @@ describe("Employee", () => {
       expect(employee.firstName).to.be.equal("Joanna");
     });
 
-    after(async () => {
+    afterEach(async () => {
       await Employee.deleteMany();
     });
   });
@@ -67,7 +67,7 @@ describe("Employee", () => {
   });
 
   describe("Updating data", () => {
-    before(async () => {
+    beforeEach(async () => {
       const testEmpOne = new Employee({
         firstName: "Joe",
         lastName: "doe",
@@ -83,28 +83,31 @@ describe("Employee", () => {
       await testEmpTwo.save();
     });
     it('should properly update one document with "updateOne" method', async () => {
-      await Employee.updateOne({ name: "Joe" }, { $set: { name: "Johny" } });
+      await Employee.updateOne(
+        { firstName: "Joe" },
+        { $set: { firstName: "Johny" } }
+      );
       const updatedEmployee = await Employee.findOne({
-        name: "Johny",
+        firstName: "Johny",
       });
       expect(updatedEmployee).to.not.be.null;
     });
 
     it('should properly update one document with "save" method', async () => {
-      const Employee = await Employee.findOne({ name: "Joe" });
-      Employee.name = "Johny";
-      await Employee.save();
+      const employee = await Employee.findOne({ firstName: "Joe" });
+      employee.firstName = "Johny";
+      await employee.save();
 
       const updatedEmployee = await Employee.findOne({
-        name: "Johny",
+        firstName: "Johny",
       });
       expect(updatedEmployee).to.not.be.null;
     });
 
     it('should properly update multiple documents with "updateMany" method', async () => {
-      await Employee.updateMany({}, { $set: { name: "Updated!" } });
-      const Employees = await Employee.find({ name: "Updated!" });
-      expect(Employees.length).to.be.equal(2);
+      await Employee.updateMany({}, { $set: { firstName: "Updated!" } });
+      const employees = await Employee.find({ firstName: "Updated!" });
+      expect(employees.length).to.be.equal(2);
     });
 
     afterEach(async () => {
@@ -113,7 +116,7 @@ describe("Employee", () => {
   });
 
   describe("Removing data", () => {
-    before(async () => {
+    beforeEach(async () => {
       const testEmpOne = new Employee({
         firstName: "Joe",
         lastName: "doe",
@@ -130,15 +133,15 @@ describe("Employee", () => {
     });
 
     it('should properly remove one document with "deleteOne" method', async () => {
-      const Employee = await Employee.deleteOne({ name: "Joe" });
-      const removeEmployee = await Employee.findOne({
+      await Employee.deleteOne({ name: "Joe" });
+      const removedEmployee = await Employee.findOne({
         name: "Joe",
       });
-      expect(removeEmployee).to.be.null;
+      expect(removedEmployee).to.be.null;
     });
 
     it('should properly remove one document with "remove" method', async () => {
-      const Employee = await Employee.findOne({ name: "Joanna" });
+      await Employee.findOne({ name: "Joanna" });
       await Employee.remove();
       const removedEmployee = await Employee.findOne({
         name: "Joanna",
@@ -148,8 +151,8 @@ describe("Employee", () => {
 
     it('should properly remove multiple documents with "deleteMany" method', async () => {
       await Employee.deleteMany();
-      const Employees = await Employee.find();
-      expect(Employees.length).to.be.equal(0);
+      const employees = await Employee.find();
+      expect(employees.length).to.be.equal(0);
     });
     afterEach(async () => {
       await Employee.deleteMany();
